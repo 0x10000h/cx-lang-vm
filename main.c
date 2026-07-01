@@ -145,45 +145,35 @@ int main(int argc, char **argv) {
     
     ErrorHandler *errors = eh_create();
     
-    printf("[*] Lexing...\n");
     Lexer *lex = lexer_create(source, errors);
     lexer_tokenize(lex);
-    printf("[+] Generated %zu tokens\n", lex->token_count);
     
     if (errors->count > 0) {
         eh_print_errors(errors);
         return 1;
     }
     
-    printf("[*] Parsing...\n");
     Parser *parser = parser_create(lex, errors);
     ASTNode *ast = parser_parse_program(parser);
-    printf("[+] AST generated\n");
     
     if (errors->count > 0) {
         eh_print_errors(errors);
         return 1;
     }
     
-    printf("[*] Semantic Analysis...\n");
     SemanticAnalyzer *sa = semantic_analyzer_create(errors);
     semantic_analyze(sa, ast);
-    printf("[+] Semantic analysis completed\n");
     
     if (errors->count > 0) {
         eh_print_errors(errors);
         return 1;
     }
     
-    printf("[*] Generating bytecode...\n");
     BytecodeModule *module = bytecode_module_create();
     generate_bytecode(module, ast);
-    printf("[+] Bytecode generated (%zu instructions)\n", module->instr_count);
     
-    printf("[*] Executing bytecode...\n");
     VM *vm = vm_create(module);
     int result = vm_execute(vm);
-    printf("[+] Execution completed with code %d\n", result);
     
     vm_free(vm);
     bytecode_module_free(module);
