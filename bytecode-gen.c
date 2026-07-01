@@ -7,7 +7,7 @@
  * BYTECODE MODULE
  * ============================================================================ */
 
-ByteCodeModule *bytecode_module_create(void) {
+BytecodeModule *bytecode_module_create(void) {
     BytecodeModule *module = malloc(sizeof(BytecodeModule));
     module->instructions = malloc(sizeof(Instruction) * 4096);
     module->instr_count = 0;
