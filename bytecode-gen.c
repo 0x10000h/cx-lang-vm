@@ -94,10 +94,10 @@ int bytecode_add_function(BytecodeModule *module, const char *name, int64_t offs
 }
 
 /* ============================================================================
- * BYTECODE GENERATION
+ * BYTECODE GENERATION FROM AST
  * ============================================================================ */
 
-/* Forward declarations */
+/* Forward declarations from compiler.c */
 typedef struct ASTNode ASTNode;
 
 typedef enum {
@@ -122,13 +122,13 @@ struct ASTNode {
     size_t child_capacity;
 };
 
-/* Variable scope tracking for code generation */
+/* Variable scope tracking for bytecode generation */
 typedef struct {
     char *name;
     int stack_offset;
 } VarInfo;
 
-typedef struct {
+typedef struct GenScope {
     VarInfo *vars;
     int var_count;
     struct GenScope *parent;
@@ -176,6 +176,7 @@ void gen_scope_define_var(GenScope *scope, const char *name, int offset) {
 }
 
 void generate_expr(CodeGen *gen, ASTNode *expr);
+void generate_stmt(CodeGen *gen, ASTNode *stmt);
 
 void generate_expr(CodeGen *gen, ASTNode *expr) {
     if (!expr) return;
@@ -188,7 +189,8 @@ void generate_expr(CodeGen *gen, ASTNode *expr) {
         }
         case NODE_FLOAT_LIT: {
             double val = strtod(expr->value, NULL);
-            bytecode_emit(gen->module, OP_LOAD_FLOAT, *(int64_t*)&val, 0);
+            int64_t bits = *(int64_t*)&val;
+            bytecode_emit(gen->module, OP_LOAD_FLOAT, bits, 0);
             break;
         }
         case NODE_STRING_LIT: {
@@ -270,8 +272,6 @@ void generate_expr(CodeGen *gen, ASTNode *expr) {
             break;
     }
 }
-
-void generate_stmt(CodeGen *gen, ASTNode *stmt);
 
 void generate_stmt(CodeGen *gen, ASTNode *stmt) {
     if (!stmt) return;
