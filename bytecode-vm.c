@@ -189,6 +189,48 @@ int vm_execute(VM *vm) {
                 break;
             }
             
+            case OP_LOAD_VAR: {
+                if (instr.arg1 < (int64_t)vm->local_count) {
+                    vm_push(vm, vm->locals[instr.arg1]);
+                } else {
+                    Value null_val = {.type = VAL_NULL};
+                    vm_push(vm, null_val);
+                }
+                break;
+            }
+            
+            case OP_STORE_VAR: {
+                Value val = vm_pop(vm);
+                if (instr.arg1 < (int64_t)vm->local_capacity) {
+                    vm->locals[instr.arg1] = val;
+                    if (instr.arg1 >= (int64_t)vm->local_count) {
+                        vm->local_count = instr.arg1 + 1;
+                    }
+                }
+                break;
+            }
+            
+            case OP_LOAD_GLOBAL: {
+                if (instr.arg1 < (int64_t)vm->global_count) {
+                    vm_push(vm, vm->globals[instr.arg1]);
+                } else {
+                    Value null_val = {.type = VAL_NULL};
+                    vm_push(vm, null_val);
+                }
+                break;
+            }
+            
+            case OP_STORE_GLOBAL: {
+                Value val = vm_pop(vm);
+                if (instr.arg1 < (int64_t)vm->global_capacity) {
+                    vm->globals[instr.arg1] = val;
+                    if (instr.arg1 >= (int64_t)vm->global_count) {
+                        vm->global_count = instr.arg1 + 1;
+                    }
+                }
+                break;
+            }
+            
             case OP_ADD: {
                 Value b = vm_pop(vm);
                 Value a = vm_pop(vm);
@@ -414,6 +456,33 @@ int vm_execute(VM *vm) {
                     vm->pc = instr.arg1;
                     continue;
                 }
+                break;
+            }
+            
+            case OP_CALL: {
+                /* Call user-defined function */
+                int func_index = instr.arg1;
+                if (func_index >= 0 && func_index < (int)vm->module->function_count) {
+                    int64_t func_addr = vm->module->function_offsets[func_index];
+                    vm->pc = func_addr;
+                    continue;
+                }
+                break;
+            }
+            
+            case OP_RET: {
+                /* Return from function - for now just continue */
+                break;
+            }
+            
+            case OP_POP: {
+                vm_pop(vm);
+                break;
+            }
+            
+            case OP_DUP: {
+                Value val = vm_peek(vm);
+                vm_push(vm, val);
                 break;
             }
             
