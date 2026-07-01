@@ -79,10 +79,8 @@ int main(int argc, char **argv) {
     
     printf("[*] Generating bytecode...\n");
     BytecodeModule *module = bytecode_module_create();
-    
-    /* TODO: Bytecode generation from AST */
-    
-    printf("[+] Bytecode generated\n");
+    generate_bytecode(module, ast);
+    printf("[+] Bytecode generated (%zu instructions)\n", module->instr_count);
     
     printf("[*] Executing bytecode...\n");
     VM *vm = vm_create(module);
